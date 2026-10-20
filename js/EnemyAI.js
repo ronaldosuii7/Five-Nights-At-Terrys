@@ -203,47 +203,35 @@ class EnemyAI {
         
         // 每个摄像头使用的角色图片（根据距离办公室远近）
         this.characterImages = {
-            'cam11': 'assets/images/enemyep1.png',
-            'cam10': 'assets/images/ep1.png',
-            'cam1': 'assets/images/ep4.png',
-            'cam9': 'assets/images/enemyep1.png',
-            'cam8': 'assets/images/enemyep1.png',
-            'cam7': 'assets/images/enemyep1.png',
-            'cam6': 'assets/images/enemyep1.png',
-            'cam5': 'assets/images/enemyep4.png',
-            'cam4': 'assets/images/ep1.png',
-            'cam3': 'assets/images/ep4.png',
-            'cam2': 'assets/images/enemyep1.png',
+            'cam11': 'epBack',
+            'cam10': 'epFront',
+            'cam1': 'epClose',
+            'cam9': 'epBack',
+            'cam8': 'epBack',
+            'cam7': 'epBack',
+            'cam6': 'epBack',
+            'cam5': 'epBackClose',
+            'cam4': 'epFront',
+            'cam3': 'epClose',
+            'cam2': 'epBack',
         };
         
-        // Night 6 专用图片（带电眼）
-        this.characterImagesNight6 = {
-            'cam11': 'assets/images/enemyep1_night6.png',
-            'cam10': 'assets/images/ep1_night6.png',
-            'cam1': 'assets/images/ep4_night6.png',
-            'cam9': 'assets/images/enemyep1_night6.png',
-            'cam8': 'assets/images/enemyep1_night6.png',
-            'cam7': 'assets/images/enemyep1_night6.png',
-            'cam6': 'assets/images/enemyep1_night6.png',
-            'cam5': 'assets/images/enemyep4_night6.png',
-            'cam4': 'assets/images/ep1_night6.png',
-            'cam3': 'assets/images/ep4_night6.png',
-            'cam2': 'assets/images/enemyep1_night6.png',
-        };
+        // Night 6 adds lightning-eye effects in the camera renderer.
+        this.characterImagesNight6 = this.characterImages;
         
-        // 特朗普的图片配置（使用绝对路径）
+        // The repository only includes a single Trump character image.
         this.trumpImages = {
-            'cam10': 'assets/images/trump3.png',
-            'cam11': 'assets/images/trump3.png',
-            'cam9': 'assets/images/trump.png',
-            'cam8': 'assets/images/trump5.png',
-            'cam7': 'assets/images/trump3.png',
-            'cam6': 'assets/images/trump3.png',
-            'cam5': 'assets/images/trump2.png',
-            'cam1': 'assets/images/trump4.png',
-            'cam2': 'assets/images/trump4.png',
-            'cam3': 'assets/images/trump2.png',
-            'cam4': 'assets/images/trump3.png',
+            'cam10': 'trumpCharacter',
+            'cam11': 'trumpCharacter',
+            'cam9': 'trumpCharacter',
+            'cam8': 'trumpCharacter',
+            'cam7': 'trumpCharacter',
+            'cam6': 'trumpCharacter',
+            'cam5': 'trumpCharacter',
+            'cam1': 'trumpCharacter',
+            'cam2': 'trumpCharacter',
+            'cam3': 'trumpCharacter',
+            'cam4': 'trumpCharacter',
         };
         
         // 定义移动路径图（根据地图连接关系，只能向前移动）
@@ -1290,11 +1278,6 @@ class EnemyAI {
         this.stop();
         
         // 霍金的特殊跳杀动画
-        if (enemy === 'hawking') {
-            this.triggerHawkingMissileJumpscare();
-            return;
-        }
-        
         // 停止所有音效
         this.game.assets.stopSound('vents');
         this.game.assets.stopSound('static');
@@ -1386,10 +1369,10 @@ class EnemyAI {
     
     // 获取当前EP的图片（根据夜数选择是否带电眼）
     getCurrentImage(cam, night) {
-        if (night === 6 && this.characterImagesNight6[cam]) {
-            return this.characterImagesNight6[cam];
-        }
-        return this.characterImages[cam];
+        const imageKey = night === 6 && this.characterImagesNight6[cam]
+            ? this.characterImagesNight6[cam]
+            : this.characterImages[cam];
+        return this.game.assets.images[imageKey]?.src || '';
     }
     
     // 获取Trump当前位置
@@ -1552,12 +1535,21 @@ class EnemyAI {
         let warningIcon = document.getElementById('hawking-warning-icon');
         
         if (!warningIcon) {
-            warningIcon = document.createElement('img');
+            warningIcon = document.createElement('div');
             warningIcon.id = 'hawking-warning-icon';
             warningIcon.style.position = 'absolute';
             warningIcon.style.zIndex = '1000';
             warningIcon.style.display = 'block';
             warningIcon.style.animation = 'flash 0.5s infinite';
+            warningIcon.style.border = '2px solid currentColor';
+            warningIcon.style.borderRadius = '50%';
+            warningIcon.style.boxSizing = 'border-box';
+            warningIcon.style.fontFamily = 'Arial, sans-serif';
+            warningIcon.style.fontWeight = 'bold';
+            warningIcon.style.lineHeight = '1';
+            warningIcon.style.textAlign = 'center';
+            warningIcon.style.textShadow = '0 0 4px #000';
+            warningIcon.style.boxShadow = '0 0 8px currentColor';
             
             // 根据摄像头状态决定添加到哪里
             if (this.game.state.cameraOpen) {
@@ -1604,11 +1596,15 @@ class EnemyAI {
             }
         }
         
-        // 设置警告图片
+        // Use a text warning so the alert does not depend on absent image files.
         if (this.hawking.warningLevel === 1) {
-            warningIcon.src = 'assets/images/Warninglight.png';
+            warningIcon.textContent = '!';
+            warningIcon.style.color = '#ff0';
+            warningIcon.style.backgroundColor = 'rgba(80, 60, 0, 0.9)';
         } else if (this.hawking.warningLevel === 2) {
-            warningIcon.src = 'assets/images/Warningheavy.png';
+            warningIcon.textContent = '!!';
+            warningIcon.style.color = '#f00';
+            warningIcon.style.backgroundColor = 'rgba(80, 0, 0, 0.9)';
         }
     }
     
@@ -1638,127 +1634,6 @@ class EnemyAI {
         this.hawking.attackTimer = setTimeout(() => {
             this.triggerJumpscare('hawking');
         }, 4000);
-    }
-    
-    // 霍金的导弹跳杀动画
-    triggerHawkingMissileJumpscare() {
-        console.log('Hawking missile jumpscare!');
-        
-        // 停止所有音效
-        this.game.assets.stopSound('vents');
-        this.game.assets.stopSound('static');
-        
-        // 创建跳杀动画容器
-        const jumpscareContainer = document.createElement('div');
-        jumpscareContainer.id = 'jumpscare-container';
-        jumpscareContainer.style.position = 'fixed';
-        jumpscareContainer.style.top = '0';
-        jumpscareContainer.style.left = '0';
-        jumpscareContainer.style.width = '100%';
-        jumpscareContainer.style.height = '100%';
-        jumpscareContainer.style.zIndex = '99999';
-        jumpscareContainer.style.overflow = 'hidden';
-        jumpscareContainer.style.backgroundColor = '#000';
-        
-        // 创建办公室背景
-        const officeBackground = document.createElement('img');
-        officeBackground.src = this.game.assets.images.office.src;
-        officeBackground.style.position = 'absolute';
-        officeBackground.style.top = '0';
-        officeBackground.style.left = '0';
-        officeBackground.style.width = '100%';
-        officeBackground.style.height = '100%';
-        officeBackground.style.objectFit = 'cover';
-        officeBackground.style.zIndex = '1';
-        
-        // 创建霍金图片（在房间里）
-        const hawkingImg = document.createElement('img');
-        hawkingImg.src = 'assets/images/mrstephen.png';
-        hawkingImg.style.position = 'absolute';
-        hawkingImg.style.left = '43.6%';
-        hawkingImg.style.bottom = '27.4%';
-        hawkingImg.style.width = '30%';
-        hawkingImg.style.height = 'auto';
-        hawkingImg.style.zIndex = '2';
-        hawkingImg.style.filter = 'brightness(0.68) contrast(1) saturate(1)';
-        
-        // 创建导弹图片（从霍金位置飞向玩家）
-        const missileImg = document.createElement('img');
-        missileImg.src = 'assets/images/front.png';
-        missileImg.style.position = 'absolute';
-        missileImg.style.left = '25%';
-        missileImg.style.top = '40%';
-        missileImg.style.width = '5%';
-        missileImg.style.height = 'auto';
-        missileImg.style.zIndex = '3';
-        missileImg.style.transition = 'all 1s ease-out';
-        
-        // 创建爆炸帧图容器（初始隐藏）
-        const explosionImg = document.createElement('div');
-        explosionImg.style.position = 'absolute';
-        explosionImg.style.top = '50%';
-        explosionImg.style.left = '50%';
-        explosionImg.style.transform = 'translate(-50%, -50%)';
-        explosionImg.style.width = '50vw'; // 容器宽度
-        explosionImg.style.height = '50vh'; // 容器高度
-        explosionImg.style.zIndex = '4';
-        explosionImg.style.backgroundImage = 'url(assets/images/exp2.png)';
-        explosionImg.style.backgroundSize = '400% auto'; // 4列，高度自适应
-        explosionImg.style.backgroundRepeat = 'no-repeat';
-        explosionImg.style.backgroundPosition = '0% 0%';
-        explosionImg.style.display = 'none';
-        
-        jumpscareContainer.appendChild(officeBackground);
-        jumpscareContainer.appendChild(hawkingImg);
-        jumpscareContainer.appendChild(missileImg);
-        jumpscareContainer.appendChild(explosionImg);
-        document.body.appendChild(jumpscareContainer);
-        
-        // 播放霍金跳杀音效
-        this.game.assets.playSound('hawkingJumpscare', false, 1.0);
-        
-        // 导弹飞向玩家（放大并移动到中心）
-        setTimeout(() => {
-            missileImg.style.left = '50%';
-            missileImg.style.top = '50%';
-            missileImg.style.transform = 'translate(-50%, -50%)';
-            missileImg.style.width = '80%';
-        }, 50);
-        
-        // 1秒后导弹到达，开始爆炸动画
-        setTimeout(() => {
-            missileImg.style.display = 'none';
-            explosionImg.style.display = 'block';
-            
-            // 播放爆炸帧动画（使用第一列的4帧，原图是4列3行）
-            let frame = 0;
-            const totalFrames = 3; // 0-3共4帧
-            const frameInterval = 80; // 每帧80ms
-            
-            // 第一列的4帧对应的Y位置（手动调整后的精确位置）
-            const yPositions = [8.00, 36.50, 65.00, 93.00];
-            
-            const animateExplosion = setInterval(() => {
-                // X位置固定在0%（第一列），Y位置使用预设数组
-                explosionImg.style.backgroundPosition = `0% ${yPositions[frame]}%`;
-                
-                frame++;
-                if (frame > totalFrames) {
-                    clearInterval(animateExplosion);
-                    
-                    // 爆炸动画结束后淡出
-                    setTimeout(() => {
-                        jumpscareContainer.style.transition = 'opacity 0.5s';
-                        jumpscareContainer.style.opacity = '0';
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(jumpscareContainer);
-                            this.game.gameOver('GAME OVER');
-                        }, 500);
-                    }, 200);
-                }
-            }, frameInterval);
-        }, 1000);
     }
     
     // 电击霍金（玩家点击按钮）

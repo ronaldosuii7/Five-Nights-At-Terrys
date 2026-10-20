@@ -491,7 +491,7 @@ class CameraSystem {
         // 显示霍金（如果激活且在cam6）
         if (hawkingActive && currentCam === 'cam6') {
             const hawkingImg = document.createElement('img');
-            hawkingImg.src = 'assets/images/mrstephen.png';
+            hawkingImg.src = this.game.assets.images.hawkingJumpscare.src;
             hawkingImg.style.position = 'absolute';
             hawkingImg.className = 'visible hawking-character';
             hawkingImg.style.zIndex = '3'; // Hawking 在最上层
@@ -515,7 +515,8 @@ class CameraSystem {
         //     imageForCam: this.characterImages ? !!this.characterImages[currentCam] : 'N/A'
         // });
         
-        if (this.game.enemyAI.epstein.hasSpawned && epLocation === currentCam && this.characterImages && this.characterImages[currentCam]) {
+        const epImage = this.characterImages && this.game.assets.images[this.characterImages[currentCam]];
+        if (this.game.enemyAI.epstein.hasSpawned && epLocation === currentCam && epImage) {
             // 创建EP容器（用于包含EP图片和电眼）
             const epContainer = document.createElement('div');
             epContainer.className = 'ep-container';
@@ -539,7 +540,7 @@ class CameraSystem {
             
             // EP图片
             const epImg = document.createElement('img');
-            epImg.src = this.characterImages[currentCam];
+            epImg.src = epImage.src;
             epImg.style.position = 'relative';
             epImg.style.width = '100%';
             epImg.style.height = 'auto';
@@ -566,9 +567,10 @@ class CameraSystem {
             const trumpPositions = this.game.enemyAI.trumpPositions;
             const trumpBrightness = this.game.enemyAI.trumpBrightness;
             
-            if (trumpImages[currentCam]) {
+            const trumpImage = this.game.assets.images[trumpImages[currentCam]];
+            if (trumpImage) {
                 const trumpImg = document.createElement('img');
-                trumpImg.src = trumpImages[currentCam];
+                trumpImg.src = trumpImage.src;
                 trumpImg.style.position = 'absolute';
                 trumpImg.className = 'visible trump-character';
                 trumpImg.style.zIndex = '2'; // Trump 在上层
@@ -613,7 +615,7 @@ class CameraSystem {
         
         // 添加地图图片
         const mapImg = document.createElement('img');
-        mapImg.src = 'assets/images/FNAE-Map-layout.png';
+        mapImg.src = this.game.assets.images.cameraMap.src;
         mapImg.style.position = 'absolute';
         mapImg.style.inset = '0';
         mapImg.style.width = '100%';

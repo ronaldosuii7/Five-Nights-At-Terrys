@@ -2,10 +2,6 @@
 let game;
 let staticNoise;
 
-// 预加载进度跟踪
-let loadedAssets = 0;
-let totalAssets = 0;
-
 // 禁用浏览器默认行为，提升游戏体验
 function disableBrowserDefaults() {
     // 禁用右键菜单
@@ -113,70 +109,6 @@ function updatePreloadProgress(progress) {
     }
 }
 
-// 预加载所有游戏资源
-async function preloadGameAssets() {
-    const basePath = window.location.pathname.includes('/FNAE-HTML5-1.2.2-fix/') 
-        ? '/FNAE-HTML5-1.2.2-fix/' 
-        : './';
-    
-    // 定义所有需要预加载的资源
-    const imagePaths = [
-        'assets/images/original.png',
-        'assets/images/Cam1.png',
-        'assets/images/Cam2.png',
-        'assets/images/Cam3.png',
-        'assets/images/Cam4.png',
-        'assets/images/Cam5.png',
-        'assets/images/Cam6.png',
-        'assets/images/Cam7.png',
-        'assets/images/Cam8.png',
-        'assets/images/Cam9.png',
-        'assets/images/Cam10.png',
-        'assets/images/Cam11.png',
-        'assets/images/jump.png',
-        'assets/images/menubackground.png',
-        'assets/images/cutscene.png',
-        'assets/images/fa3.png',
-        'assets/images/FNAE-Map-layout.png',
-        'assets/images/enemyep1.png',
-        'assets/images/ep1.png',
-        'assets/images/ep4.png',
-        'assets/images/enemyep4.png',
-        'assets/images/scaryhawk.png',
-        'assets/images/scaryep.png',
-        'assets/images/scarytrump.png',
-        'assets/images/winscreen.png',  // Night 5 胜利画面
-        'assets/images/goldenstephen.png'  // Golden 霍金
-    ];
-    
-    totalAssets = imagePaths.length;
-    loadedAssets = 0;
-    
-    // 预加载图片
-    const imagePromises = imagePaths.map(path => {
-        return new Promise((resolve) => {
-            const img = new Image();
-            img.onload = () => {
-                loadedAssets++;
-                updatePreloadProgress((loadedAssets / totalAssets) * 100);
-                resolve();
-            };
-            img.onerror = () => {
-                console.warn(`Failed to load image: ${path}`);
-                loadedAssets++;
-                updatePreloadProgress((loadedAssets / totalAssets) * 100);
-                resolve();
-            };
-            const imageUrl = new URL(basePath + path, window.location.href);
-            imageUrl.searchParams.set('v', IMAGE_ASSET_VERSION);
-            img.src = imageUrl.href;
-        });
-    });
-    
-    await Promise.all(imagePromises);
-    updatePreloadProgress(100);
-}
-
 // 隐藏预加载动画
 function hidePreloader() {
     const preloader = document.getElementById('preloader');
@@ -185,21 +117,42 @@ function hidePreloader() {
     }
 }
 
-// 页面加载完成后启动
-window.addEventListener('DOMContentLoaded', async () => {
-    // 禁用浏览器默认行为
-    disableBrowserDefaults();
+function showPreloadError(error) {
+    const preloader = document.getElementById('preloader');
+    const message = document.getElementById('preloader-error');
+    const retryButton = document.getElementById('retry-loading');
+    const loadingText = document.querySelector('.preloader-text');
 
-    // 初始化游戏
-    game = new Game();
-    staticNoise = new StaticNoise();
+    preloader.classList.add('has-error');
+    loadingText.textContent = 'COULD NOT LOAD GAME ART';
+    message.textContent = `${error.message}. Check your connection, then retry.`;
+    message.classList.remove('hidden');
+    retryButton.disabled = false;
+    retryButton.textContent = 'RETRY LOADING';
+    retryButton.classList.remove('hidden');
+}
 
-    // Keep the loading screen visible until the images and game assets are ready.
-    await Promise.all([
-        preloadGameAssets(),
-        game.assets.loadAssets()
-    ]);
+function updatePreloadedImageSources() {
+    const imageBindings = [
+        ['#cutscene img', 'cutscene'],
+        ['.vent-icon', 'ventIcon'],
+        ['#star-icon', 'star'],
+        ['#star-icon-2', 'star'],
+        ['#star-icon-3', 'star']
+    ];
 
+    imageBindings.forEach(([selector, imageKey]) => {
+        const element = document.querySelector(selector);
+        if (element) {
+            element.src = game.assets.images[imageKey].src;
+        }
+    });
+
+    document.getElementById('main-menu').style.backgroundImage =
+        `url('${game.assets.images.menuBackground.src}')`;
+}
+
+function finishGameStartup() {
     // 预加载背景图片（用于恐怖脸效果）
     preloadBackgrounds();
 
@@ -221,23 +174,17 @@ window.addEventListener('DOMContentLoaded', async () => {
         
         // 如果是autostart，立即尝试播放
         if (autostart === '1') {
-            // console.log('检测到autostart参数，尝试自动播放音乐...');
-            menuMusic.play().then(() => {
-                // console.log('✅ 音乐自动播放成功！');
-            }).catch(e => {
-                // console.log('❌ 自动播放失败，等待用户交互:', e);
-                // 失败则等待用户点击
+            menuMusic.play().catch(() => {
                 setupManualPlayback();
             });
         } else {
-            // 正常流程：等待用户点击
             setupManualPlayback();
         }
         
         function setupManualPlayback() {
             const playMusic = () => {
                 if (mainMenu && !mainMenu.classList.contains('hidden')) {
-                    menuMusic.play().catch(e => {/* console.log('音乐播放需要用户交互') */});
+                    menuMusic.play().catch(() => {});
                 }
                 document.removeEventListener('click', playMusic);
                 document.removeEventListener('keydown', playMusic);
@@ -267,6 +214,45 @@ window.addEventListener('DOMContentLoaded', async () => {
             staticNoise.start();
         }
     }
+}
+
+async function loadGameAssets() {
+    const retryButton = document.getElementById('retry-loading');
+    const errorMessage = document.getElementById('preloader-error');
+    const preloader = document.getElementById('preloader');
+    const loadingText = document.querySelector('.preloader-text');
+
+    retryButton.disabled = true;
+    retryButton.textContent = 'RETRYING...';
+    retryButton.classList.add('hidden');
+    errorMessage.classList.add('hidden');
+    preloader.classList.remove('has-error');
+    loadingText.innerHTML = 'LOADING<span class="loading-dots">...</span>';
+    updatePreloadProgress(0);
+
+    try {
+        await game.assets.loadAssets(updatePreloadProgress);
+    } catch (error) {
+        console.error('Game image loading failed:', error);
+        showPreloadError(error);
+        return;
+    }
+
+    updatePreloadedImageSources();
+    finishGameStartup();
+}
+
+// 页面加载完成后启动
+window.addEventListener('DOMContentLoaded', async () => {
+    // 禁用浏览器默认行为
+    disableBrowserDefaults();
+
+    // 初始化游戏
+    game = new Game();
+    staticNoise = new StaticNoise();
+
+    document.getElementById('retry-loading').addEventListener('click', loadGameAssets);
+    await loadGameAssets();
 });
 
 // 监听来自父页面的消息（iframe 通信）

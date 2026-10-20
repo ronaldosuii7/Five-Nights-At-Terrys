@@ -8,8 +8,8 @@ const getBasePath = () => {
 };
 
 const basePath = getBasePath();
-const normalBackground = `${basePath}assets/images/menubackground.png`;
-const scaryBackgrounds = [
+let normalBackground = `${basePath}assets/images/menubackground.png`;
+let scaryBackgrounds = [
     `${basePath}assets/images/scaryhawk.png`,
     `${basePath}assets/images/scaryep.png`,
     `${basePath}assets/images/scarytrump.png`
@@ -20,15 +20,18 @@ const preloadedImages = {};
 
 // 预加载所有背景图片
 function preloadBackgrounds() {
-    const normalImg = new Image();
-    normalImg.src = normalBackground;
-    preloadedImages['normal'] = normalImg;
-    
-    scaryBackgrounds.forEach((bg, index) => {
-        const img = new Image();
-        img.src = bg;
-        preloadedImages[`scary-${index}`] = img;
-    });
+    if (!game || !game.assets.loaded) return;
+
+    normalBackground = game.assets.images.menuBackground.src;
+    scaryBackgrounds = [
+        game.assets.images.scaryHawk.src,
+        game.assets.images.scaryEp.src,
+        game.assets.images.scaryTrump.src
+    ];
+    preloadedImages.normal = game.assets.images.menuBackground;
+    preloadedImages['scary-0'] = game.assets.images.scaryHawk;
+    preloadedImages['scary-1'] = game.assets.images.scaryEp;
+    preloadedImages['scary-2'] = game.assets.images.scaryTrump;
 }
 
 function startScaryFaceFlicker() {

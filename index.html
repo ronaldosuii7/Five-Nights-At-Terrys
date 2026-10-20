@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Five Nights At Terry's</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261019-1">
 </head>
 
 <body>
@@ -23,6 +23,8 @@
                 <div class="progress-bar" id="progress-bar"></div>
             </div>
             <div class="preloader-percentage" id="preloader-percentage">0%</div>
+            <p id="preloader-error" class="preloader-error hidden" role="alert"></p>
+            <button id="retry-loading" class="hidden" type="button">RETRY LOADING</button>
         </div>
     </div>
 
@@ -45,7 +47,7 @@
 
                 <div id="bottom-right-ui">
                     <div id="oxygen-display">
-                        <img src="assets/images/fa3.png" alt="Vent" class="vent-icon">
+                        <img alt="Vent" class="vent-icon">
                         <span id="power-value">100</span><span class="percent-sign">%</span><span
                             class="oxygen-unit">O<sub>2</sub></span>
                     </div>
@@ -71,7 +73,7 @@
 
 
         <div id="cutscene" class="hidden">
-            <img src="assets/images/cutscene.png" alt="Cutscene">
+            <img alt="Cutscene">
             <div class="cutscene-hint">Click to continue...</div>
         </div>
 
@@ -82,9 +84,9 @@
 
 
         <div id="main-menu">
-            <img id="star-icon" class="hidden" src="assets/images/star.png" alt="Star">
-            <img id="star-icon-2" class="hidden" src="assets/images/star.png" alt="Star 2">
-            <img id="star-icon-3" class="hidden" src="assets/images/star.png" alt="Star 3">
+            <img id="star-icon" class="hidden" alt="Star">
+            <img id="star-icon-2" class="hidden" alt="Star 2">
+            <img id="star-icon-3" class="hidden" alt="Star 3">
 
             <h1>FIVE<br>NIGHTS<br>AT<br>TERRY'S</h1>
             <button id="start-game">NEW GAME</button>
@@ -228,16 +230,16 @@
         </div>
     </div>
 
-    <script src="js/GameState.js"></script>
-    <script src="js/AssetManager.js"></script>
-    <script src="js/UIManager.js"></script>
-    <script src="js/CameraSystem.js"></script>
-    <script src="js/EnemyAI.js"></script>
-    <script src="js/InputHandler.js"></script>
-    <script src="js/StaticNoise.js"></script>
-    <script src="js/ScaryFaceFlicker.js"></script>
-    <script src="js/Game.js?v=20261017-1151"></script>
-    <script src="js/main.js"></script>
+    <script src="js/GameState.js?v=20261019-1"></script>
+    <script src="js/AssetManager.js?v=20261019-1"></script>
+    <script src="js/UIManager.js?v=20261019-1"></script>
+    <script src="js/CameraSystem.js?v=20261019-1"></script>
+    <script src="js/EnemyAI.js?v=20261019-1"></script>
+    <script src="js/InputHandler.js?v=20261019-1"></script>
+    <script src="js/StaticNoise.js?v=20261019-1"></script>
+    <script src="js/ScaryFaceFlicker.js?v=20261019-1"></script>
+    <script src="js/Game.js?v=20261019-1"></script>
+    <script src="js/main.js?v=20261019-1"></script>
 
 </body>
 

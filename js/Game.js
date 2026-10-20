@@ -617,7 +617,7 @@ class Game {
         
         // 创建金色霍金图片
         const goldenImg = document.createElement('img');
-        goldenImg.src = '/FNAE-HTML5-1.2.2-fix/assets/images/goldenstephen.png';
+        goldenImg.src = this.assets.images.goldenStephen.src;
         goldenImg.style.position = 'absolute';
         goldenImg.style.top = '50%';
         goldenImg.style.left = '50%';
@@ -996,7 +996,7 @@ class Game {
                         
                         // 创建胜利画面
                         const winScreen = document.createElement('img');
-                        winScreen.src = '/FNAE-HTML5-1.2.2-fix/assets/images/winscreen.png';
+                        winScreen.src = this.assets.images.winScreen.src;
                         winScreen.style.width = '100%';
                         winScreen.style.height = '100%';
                         winScreen.style.objectFit = 'contain';
@@ -1073,7 +1073,7 @@ class Game {
             this.assets.playSound('chimes', false, 1.0);
         }, 1000);
         
-        // 3秒后淡出时间，显示night6.png图片
+        // 3秒后淡出时间，显示现有的霍金图片。
         setTimeout(() => {
             timeDisplay.style.transition = 'opacity 0.5s';
             timeDisplay.style.opacity = '0';
@@ -1082,9 +1082,9 @@ class Game {
                 // 移除时间显示
                 animationContainer.removeChild(timeDisplay);
                 
-                // 创建night6.png图片
+                // 使用仓库中已有的霍金图片作为 Night 6 胜利画面。
                 const night6Image = document.createElement('img');
-                night6Image.src = '/FNAE-HTML5-1.2.2-fix/assets/images/night6.png';
+                night6Image.src = this.assets.images.hawkingJumpscare.src;
                 night6Image.style.width = '100%';
                 night6Image.style.height = '100%';
                 night6Image.style.objectFit = 'contain';

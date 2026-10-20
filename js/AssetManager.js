@@ -1,4 +1,4 @@
-const IMAGE_ASSET_VERSION = '20261017-1';
+const IMAGE_ASSET_VERSION = '20261019-1';
 
 // 资源管理器
 class AssetManager {
@@ -6,6 +6,8 @@ class AssetManager {
         this.images = {};
         this.sounds = {};
         this.loaded = false;
+        this.failedImages = [];
+        this.loadAttempt = 0;
         
         // 分类音量设置
         this.volumeSettings = this.loadVolumeSettings();
@@ -48,7 +50,7 @@ class AssetManager {
         return this.volumeSettings;
     }
 
-    async loadAssets() {
+    async loadAssets(onProgress) {
         // 获取当前脚本的基础路径
         const basePath = this.getBasePath();
         
@@ -69,6 +71,21 @@ class AssetManager {
             jumpscare: `${basePath}assets/images/jump.png`, // EP跳杀图片
             trumpJumpscare: `${basePath}assets/images/jumptrump.png`, // Trump跳杀图片
             hawkingJumpscare: `${basePath}assets/images/scaryhawking.png`, // Hawking跳杀图片
+            goldenStephen: `${basePath}assets/images/goldenstephen.png`,
+            winScreen: `${basePath}assets/images/winscreen.png`,
+            cameraMap: `${basePath}assets/images/FNAE-Map-layout.png`,
+            epBack: `${basePath}assets/images/enemyep1.png`,
+            epFront: `${basePath}assets/images/ep1.png`,
+            epClose: `${basePath}assets/images/ep4.png`,
+            epBackClose: `${basePath}assets/images/enemyep4.png`,
+            trumpCharacter: `${basePath}assets/images/jumptrump.png`,
+            menuBackground: `${basePath}assets/images/menubackground.png`,
+            scaryHawk: `${basePath}assets/images/scaryhawk.png`,
+            scaryEp: `${basePath}assets/images/scaryep.png`,
+            scaryTrump: `${basePath}assets/images/scarytrump.png`,
+            cutscene: `${basePath}assets/images/cutscene.png`,
+            ventIcon: `${basePath}assets/images/fa3.png`,
+            star: `${basePath}assets/images/star.png`,
         };
 
         const soundPaths = {
@@ -88,15 +105,60 @@ class AssetManager {
             goldenstephenscare: `${basePath}assets/sounds/goldenstephenscare.ogg`, // Golden 霍金音效
         };
 
-        await Promise.all(Object.entries(imagePaths).map(async ([key, path]) => {
-            try {
-                const imageUrl = new URL(path, window.location.href);
-                imageUrl.searchParams.set('v', IMAGE_ASSET_VERSION);
-                this.images[key] = await this.loadImage(imageUrl.href);
-            } catch (e) {
-                console.warn(`Failed to load image: ${path}`);
+        const imageAliases = {
+            trumpCharacter: 'trumpJumpscare'
+        };
+        this.loaded = false;
+        this.failedImages = [];
+        const loadAttempt = ++this.loadAttempt;
+        const imageEntries = Object.entries(imagePaths);
+        let completedImages = 0;
+        let nextImageIndex = 0;
+
+        const loadNextImage = async () => {
+            while (nextImageIndex < imageEntries.length) {
+                const [key, path] = imageEntries[nextImageIndex++];
+                const aliasedImage = this.images[imageAliases[key]];
+
+                if (aliasedImage?.complete && aliasedImage.naturalWidth > 0) {
+                    this.images[key] = aliasedImage;
+                    completedImages++;
+                    if (typeof onProgress === 'function') {
+                        onProgress(completedImages / imageEntries.length * 100);
+                    }
+                    continue;
+                }
+
+                if (this.images[key]?.complete && this.images[key].naturalWidth > 0) {
+                    completedImages++;
+                    if (typeof onProgress === 'function') {
+                        onProgress(completedImages / imageEntries.length * 100);
+                    }
+                    continue;
+                }
+
+                try {
+                    this.images[key] = await this.loadImageWithRetry(path, loadAttempt);
+                } catch (error) {
+                    this.failedImages.push({ key, path });
+                    console.warn(`Failed to load image after retries: ${path}`, error);
+                }
+
+                completedImages++;
+                if (typeof onProgress === 'function') {
+                    onProgress(completedImages / imageEntries.length * 100);
+                }
             }
-        }));
+        };
+
+        await Promise.all([
+            loadNextImage(),
+            loadNextImage()
+        ]);
+
+        if (this.failedImages.length > 0) {
+            throw new Error(`Could not load required images: ${this.failedImages.map(({ key }) => key).join(', ')}`);
+        }
 
         // 加载音频
         for (const [key, path] of Object.entries(soundPaths)) {
@@ -110,6 +172,24 @@ class AssetManager {
         this.loaded = true;
     }
 
+    async loadImageWithRetry(src, loadAttempt) {
+        const maxRetries = 2;
+        let lastError;
+
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            try {
+                return await this.loadImage(src, attempt === 0 && loadAttempt === 1 ? 0 : loadAttempt * 10 + attempt);
+            } catch (error) {
+                lastError = error;
+                if (attempt < maxRetries) {
+                    await new Promise(resolve => setTimeout(resolve, 400 * (attempt + 1)));
+                }
+            }
+        }
+
+        throw lastError;
+    }
+
     getBasePath() {
         // 检查是否在 iframe 中
         const currentPath = window.location.pathname;
@@ -120,12 +200,28 @@ class AssetManager {
         return './';
     }
 
-    loadImage(src) {
+    loadImage(src, retryToken = 0) {
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.onload = () => resolve(img);
-            img.onerror = reject;
-            img.src = src;
+            const imageUrl = new URL(src, window.location.href);
+            imageUrl.searchParams.set('v', IMAGE_ASSET_VERSION);
+            if (retryToken > 0) {
+                imageUrl.searchParams.set('retry', retryToken.toString());
+            }
+
+            const timeoutId = setTimeout(() => {
+                img.src = '';
+                reject(new Error(`Image load timed out: ${src}`));
+            }, 20000);
+            img.onload = () => {
+                clearTimeout(timeoutId);
+                resolve(img);
+            };
+            img.onerror = () => {
+                clearTimeout(timeoutId);
+                reject(new Error(`Image request failed: ${src}`));
+            };
+            img.src = imageUrl.href;
         });
     }
 

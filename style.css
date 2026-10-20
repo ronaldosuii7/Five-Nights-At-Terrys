@@ -209,6 +209,37 @@ button {
     font-family: 'Courier New', monospace;
 }
 
+.preloader-error {
+    max-width: 460px;
+    margin: 20px auto 12px;
+    color: #ff8a8a;
+    font: 16px/1.5 'Courier New', monospace;
+    overflow-wrap: anywhere;
+}
+
+#retry-loading {
+    margin-top: 12px;
+    padding: 12px 20px;
+    border: 1px solid #f00;
+    background: #180000;
+    color: #fff;
+    font: bold 16px 'Courier New', monospace;
+    letter-spacing: 0.1em;
+}
+
+#retry-loading:hover:not(:disabled) {
+    background: #380000;
+}
+
+#retry-loading:disabled {
+    cursor: wait;
+    opacity: 0.7;
+}
+
+#preloader.has-error .preloader-spinner {
+    display: none;
+}
+
 /* 通用隐藏类 */
 .hidden {
     display: none !important;
